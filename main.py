@@ -56,25 +56,36 @@ def read_files() -> list:
 
 def clear_data():
     sessions_list: list[str] = read_files()
-    exercises_list = []
     sessions_dict: dict = {}
+    date_pattern = re.compile("([0-9]+.[0-9]+.)([^\n]+)")
 
     # Goes through each whole session
     for session in sessions_list[1:]:
+        exercises_list = []
+
         # Splits the section into separate lines
         session_cleared: list[str] = session.split("\n")
 
         # Cleans the list of empty ("") items
         session_cleared = clear_list_of_empty_items(session_cleared)
 
-        # Assigns the session name to a variable and removes it from the list
-        session_name = session_cleared[0]
+        # Assigns the session name and date to a variable and removes it from the list
+        session_name_and_date = session_cleared[0]
         session_cleared.pop(0)
+
+        session_date, session_name = re.findall(date_pattern, session_name_and_date)[0]
 
         # Goes through each line separately
         for line in session_cleared:
             line_cleared = get_exact_data(line)
-            get_formatted_list(line_cleared[0], line_cleared[1], line_cleared[2])
+            formatted_list = get_formatted_list(line_cleared[0], line_cleared[1], line_cleared[2])
+            for i in formatted_list:
+                exercises_list.append(i)
+
+        # Writes one session info into the sessions dict
+        sessions_dict[session_date] = {"SessionName": session_name,
+                                       "Exercise": exercises_list}
+    write_test_output(sessions_dict)
 
 
 def get_exact_data(line: str) -> tuple[str, str, str | None]:
@@ -100,12 +111,14 @@ def get_exact_data(line: str) -> tuple[str, str, str | None]:
         exercise_name, numerical_values = re.findall(pattern, line)[0]
 
     # Clears the numerical_values of any whitespaces that are at the end of the string
-    clean_whitespaces_back(numerical_values)
+    numerical_values = clean_whitespaces_back(numerical_values)
+    exercise_name = clean_whitespaces_back(exercise_name)
+    exercise_name = clean_whitespaces_front(exercise_name)
 
     return exercise_name, numerical_values, muscles_worked
 
 
-def get_formatted_list(exercise_name: str, numerical_values: str, muscles_worked: str) -> dict:
+def get_formatted_list(exercise_name: str, numerical_values: str, muscles_worked: str) -> list:
     """
     Returns a specifically formatted dictionary with these keys:
     :param exercise_name:
@@ -119,7 +132,7 @@ def get_formatted_list(exercise_name: str, numerical_values: str, muscles_worked
     Weight: str | None \n
     WeightType: str | None \n
     BonusRep: str | None \n
-    MusclesWorked: str | None \n
+    MusclesWorked: list | None \n
     AdditionInfo: str | None
     """
     """
@@ -155,6 +168,7 @@ def get_formatted_list(exercise_name: str, numerical_values: str, muscles_worked
     # a separate dictionary for each different type of repetition
     # Different repetition are marked by a comma
     diff_reps_uncleared = numerical_values.split(",")
+    structured_data_multiple = []
     for specific_rep in diff_reps_uncleared:
 
         # Removes whitespaces from both the beginning and the end of the string
@@ -193,6 +207,7 @@ def get_formatted_list(exercise_name: str, numerical_values: str, muscles_worked
                 structured_data["WeightType"] = "KG"
                 structured_data["Weight"] = specific_rep_values[2][:-2]
 
+        # [0-9]x[0-9]kg   [0-9]x[0-9]s   [0-9]x[0-9]m
         else:
             specific_rep_split = specific_rep.split("x")
             structured_data["SeriesAmount"] = specific_rep_split[0]
@@ -204,8 +219,12 @@ def get_formatted_list(exercise_name: str, numerical_values: str, muscles_worked
                 structured_data["Duration"] = specific_rep_split[1][:-1]
                 structured_data["DurationType"] = specific_rep_split[1][-1:]
 
-    write_test_output(structured_data)
-    return structured_data
+        structured_data_multiple.append(structured_data)
+
+    # write_test_output(structured_data)
+    if exercise_name == "Medicinbal":
+        print(structured_data)
+    return structured_data_multiple
 
 if __name__ == "__main__":
     print(clear_data())
