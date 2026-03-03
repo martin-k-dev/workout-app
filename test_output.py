@@ -1,7 +1,7 @@
 import json
 import datetime
 
-def write_test_output(content: dict):
+def write_test_output(content):
     # IF the file exists
     try:
         with open("test_output.json", "w", encoding="utf-8") as test_output_file:
