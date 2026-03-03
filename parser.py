@@ -18,45 +18,62 @@ from datetime import datetime
 # If bonus rep was done
 
 """
-OUTPUT SHOULD LOOK SOMETHING LIKE THIS (FIRST TEMPLATE)
-session_dict{ 
-    session_name1: {
-        exercise_name1: {
-            numerical_values1: xx
-            muscles_worked1: xx
-            value_type1: xx
-        },
-        exercise_name2: {
-            numerical_values2: xx
-            muscles_worked2: xx
-            value_type2: xx
-        }...
+OUTPUT FROM CLEAR_DATA() SHOULD LOOK SOMETHING LIKE THIS (FINAl TEMPLATE)
+{ 
+    "2025-11-22": {
+        "SessionName": "name",
+        "Exercises": [
+            {
+                "ExerciseName": "example name",
+                "SeriesAmount": 3,
+                "RepsAmount": 10,
+                "Duration": null,
+                "DurationType": null,
+                "Weight": 35.0,
+                "WeightType": "kg",
+                "BonusRep": false,
+                "MusclesWorked": [
+                    "muscle 1",
+                    "muscle 2"
+                ],
+                "AdditionInfo": "Weight is fine"
+            },...
+        ]
     },
-    session_name2: {
-        exercise_name1: {
-            numerical_values1: xx
-            muscles_worked1: xx
-            value_type1: xx
-        },
-        exercise_name2: {
-            numerical_values2: xx
-            muscles_worked2: xx
-            value_type2: xx
-        }
-    }...
+    "2026-01-01": {
+        "SessionName": "Example Session Name",
+        "Exercises": [
+            {
+                "ExerciseName": "Plank",
+                "SeriesAmount": 3,
+                "RepsAmount": null,
+                "Duration": 45,
+                "DurationType": "s",
+                "Weight": null,
+                "WeightType": null,
+                "BonusRep": false,
+                "MusclesWorked": [],
+                "AdditionInfo": null
+            },...
+        ]
+    }   
 }
 """
 
 
-def read_files() -> list:
+def read_example_files() -> list:
     with open("example_workout", "r", encoding="utf-8") as datafile:
         data = datafile.read()
         sessions: list = data.split("\n\n\n")
         return sessions
 
 
-def clear_data() -> dict:
-    sessions_list: list[str] = read_files()
+def clear_data(text: list[str]) -> dict:
+    """
+    Example of formatted data can be found at the top of this file (parser.py)
+    :return: A formatted list of all workout sessions
+    """
+    sessions_list: list[str] = text
     sessions_dict: dict = {}
     date_pattern = re.compile("([0-9]+.[0-9]+.[0-9]*)([^\n]+)")
 
@@ -87,9 +104,9 @@ def clear_data() -> dict:
             for i in formatted_list:
                 exercises_list.append(i)
 
-        # Writes one session info into the sessions dict
+        # Writes one session info into the all sessions dict
         sessions_dict[formatted_date] = {"SessionName": session_name,
-                                       "Exercise": exercises_list}
+                                       "Exercises": exercises_list}
 
     return sessions_dict
 
@@ -260,6 +277,7 @@ def convert_date_format(date) -> str:
 
     formatted_date = datetime(int(year), int(month), int(day)).strftime("%Y-%m-%d")
     return formatted_date
+
 
 if __name__ == "__main__":
     write_test_output(clear_data())
