@@ -28,18 +28,18 @@ def clear_list_of_empty_items(list_to_clear: list):
     return list_to_clear
 
 
-def try_convert_to_type(item, type, value_if_fail):
+def try_convert_to_type(item, type_to_convert_to, value_if_fail):
     """
     Available types - "int", "float", "bool", "str"
     :param item: item to convert
-    :param type: type to convert to
+    :param type_to_convert_to: type to convert to
     :param value_if_fail: value returned if type conversion returns an empty string
     :return:
     """
     types = ["int", "float", "bool", "str"]
-    if type in types:
+    if type_to_convert_to in types:
         try:
-            match type:
+            match type_to_convert_to:
                 case "int":
                     return int(item)
                 case "float":
@@ -52,3 +52,13 @@ def try_convert_to_type(item, type, value_if_fail):
             return value_if_fail
     else:
         raise ValueError("Type of conversion not found")
+
+
+def load_file(filepath):
+    """
+    Reads a file and returns it's whole content
+    :param filepath:
+    :return:
+    """
+    with open(filepath, "r", encoding="utf-8") as file:
+        return file.read()
