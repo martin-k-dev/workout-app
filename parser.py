@@ -19,8 +19,9 @@ from datetime import datetime
 
 """
 OUTPUT FROM CLEAR_DATA() SHOULD LOOK SOMETHING LIKE THIS (FINAl TEMPLATE)
-{ 
-    "2025-11-22": {
+[
+    {
+        "Date": "2025-11-22",
         "SessionName": "name",
         "Exercises": [
             {
@@ -56,8 +57,8 @@ OUTPUT FROM CLEAR_DATA() SHOULD LOOK SOMETHING LIKE THIS (FINAl TEMPLATE)
                 "AdditionInfo": null
             },...
         ]
-    }   
-}
+    }
+]
 """
 
 
@@ -68,13 +69,13 @@ def read_example_files() -> list:
         return sessions
 
 
-def clear_data(text: list[str]) -> dict:
+def clear_data(text: list[str]) -> list:
     """
     Example of formatted data can be found at the top of this file (parser.py)
     :return: A formatted list of all workout sessions
     """
     sessions_list: list[str] = text
-    sessions_dict: dict = {}
+    sessions_final_list: list = []
     date_pattern = re.compile("([0-9]+.[0-9]+.[0-9]*)([^\n]+)")
 
     # Goes through each whole session
@@ -105,10 +106,11 @@ def clear_data(text: list[str]) -> dict:
                 exercises_list.append(i)
 
         # Writes one session info into the all sessions dict
-        sessions_dict[formatted_date] = {"SessionName": session_name,
-                                       "Exercises": exercises_list}
+        sessions_final_list.append({"Date": formatted_date,
+                                    "SessionName": session_name,
+                                    "Exercises": exercises_list})
 
-    return sessions_dict
+    return sessions_final_list
 
 
 def get_split_data(line: str) -> tuple[str, str, str | None]:
@@ -228,17 +230,17 @@ def get_exercise_dicts(exercise_name: str, numerical_values: str, muscles_worked
 
             # [1] is RepsAmount/Duration+DurationType
             if "m" in specific_rep_values[1]:
-                structured_data["DurationType"] = "M"
+                structured_data["DurationType"] = "m"
                 structured_data["Duration"] = int(specific_rep_values[1][:-1])
             elif "s" in specific_rep_values[1]:
-                structured_data["DurationType"] = "S"
+                structured_data["DurationType"] = "s"
                 structured_data["Duration"] = int(specific_rep_values[1][:-1])
             else:
                 structured_data["RepsAmount"] = int(specific_rep_values[1])
 
             # [2] is Weight+WeightType
             if "kg" in specific_rep_values[2]:
-                structured_data["WeightType"] = "KG"
+                structured_data["WeightType"] = "kg"
                 structured_data["Weight"] = float(specific_rep_values[2][:-2])
 
         # [0-9]x[0-9]kg   [0-9]x[0-9]s   [0-9]x[0-9]m
@@ -252,6 +254,11 @@ def get_exercise_dicts(exercise_name: str, numerical_values: str, muscles_worked
             if "s" in specific_rep_split[1]:
                 structured_data["Duration"] = int(specific_rep_split[1][:-1])
                 structured_data["DurationType"] = specific_rep_split[1][-1:]
+
+        # Lowers the characters if x is not None, otherwise keeps it the way it is
+        lambda_x = lambda x: x.lower() if x is not None else x
+        structured_data["WeightType"] = lambda_x(structured_data["WeightType"])
+        structured_data["DurationType"] = lambda_x(structured_data["DurationType"])
 
         structured_data_multiple.append(structured_data)
 
@@ -280,4 +287,4 @@ def convert_date_format(date) -> str:
 
 
 if __name__ == "__main__":
-    write_test_output(clear_data())
+    write_test_output(clear_data(read_example_files()))
